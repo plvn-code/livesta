@@ -60,10 +60,24 @@ export default function Home() {
     .slice(0, 6)
     .map((s) => {
       const ps = products.filter((p) => p.series === s.id && p.imgs);
-      const sec = sections.find((x) => x.id === ps[0]?.section);
-      return { id: s.id, name: s.name, count: s.count, art: ps[0]?.id ?? "", line: SERIES_LINES[s.id] ?? sec?.name ?? "" };
+      // Label = the section most of the series lives in (THALIA is mostly care, not perfume).
+      const bySec = new Map<string, number>();
+      for (const p of ps) bySec.set(p.section, (bySec.get(p.section) ?? 0) + 1);
+      const top = [...bySec.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      const sec = sections.find((x) => x.id === top);
+      // Three cut-outs from different sub-categories, so the panel shows the range, not three shades of one lipstick.
+      const art: string[] = [];
+      const subs = new Set<string | null>();
+      for (const p of ps) {
+        if (p.cut && art.length < 3 && !subs.has(p.sub)) {
+          art.push(p.id);
+          subs.add(p.sub);
+        }
+      }
+      for (const p of ps) if (p.cut && art.length < 3 && !art.includes(p.id)) art.push(p.id);
+      return { id: s.id, name: s.name, count: s.count, art, line: SERIES_LINES[s.id] ?? sec?.name ?? "" };
     })
-    .filter((s) => s.art);
+    .filter((s) => s.art.length);
 
   const floats = pickArt(HERO_FLOATS, "oblychchia", 3);
   const tiles = TILES.map((t) => ({ ...t, sec: sections.find((s) => s.id === t.id) })).filter((t) => t.sec);

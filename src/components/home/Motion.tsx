@@ -246,35 +246,64 @@ export function Ritual({ steps }: { steps: Step[] }) {
   );
 }
 
-/** Big series names; hovering one shows its product photo next to the cursor. */
-export function SeriesWall({ items }: { items: { id: string; name: string; count: number; art: string; line: string }[] }) {
-  const peek = useRef<HTMLDivElement>(null);
-  const [cur, setCur] = useState<string | null>(null);
-  const move = (e: React.PointerEvent) => {
-    peek.current?.style.setProperty("--sx", `${e.clientX + 30}px`);
-    peek.current?.style.setProperty("--sy", `${e.clientY - 150}px`);
-  };
-  const art = items.find((i) => i.id === cur)?.art;
+export type SeriesItem = { id: string; name: string; count: number; art: string[]; line: string };
+
+const TINTS = ["t-blush", "t-nude", "t-sand", "t-rose", "t-nude", "t-blush"];
+
+/**
+ * Series as accordion panels: narrow tinted columns with a vertical name; the active one opens wide and its products float in.
+ * Opens on hover / focus / tap; while on screen and untouched it advances by itself every 4.5 s.
+ * Phones get a swipeable row of open cards instead.
+ */
+export function SeriesWall({ items }: { items: SeriesItem[] }) {
+  const [cur, setCur] = useState(0);
+  const root = useRef<HTMLDivElement>(null);
+  const hold = useRef(false);
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el || reducedMotion()) return;
+    let visible = false;
+    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    const t = window.setInterval(() => {
+      if (visible && !hold.current && document.visibilityState === "visible") setCur((c) => (c + 1) % items.length);
+    }, 4500);
+    return () => {
+      io.disconnect();
+      window.clearInterval(t);
+    };
+  }, [items.length]);
+
   return (
-    <div onPointerMove={move} onPointerLeave={() => setCur(null)}>
-      <ul className="series-list">
-        {items.map((s, i) => (
-          <li key={s.id}>
-            <Link href={`/katalog?brand=${s.id}`} className="series-row" onPointerEnter={() => setCur(s.id)} onFocus={() => setCur(s.id)} data-reveal style={{ ["--d" as string]: `${i * 0.05}s` }}>
-              <small>{String(i + 1).padStart(2, "0")}</small>
-              <b>{s.name}</b>
-              <span>
-                {s.line}
-                <br />
-                {s.count} позицій →
-              </span>
+    <div className="sx" ref={root} onPointerEnter={() => (hold.current = true)} onPointerLeave={() => (hold.current = false)}>
+      {items.map((s, i) => (
+        <article
+          key={s.id}
+          className={`sx-item ${TINTS[i % TINTS.length]} ${i === cur ? "is-on" : ""}`}
+          onPointerEnter={(e) => e.pointerType === "mouse" && setCur(i)}
+          onFocusCapture={() => setCur(i)}
+          onClick={() => setCur(i)}
+        >
+          <span className="sx-n">{String(i + 1).padStart(2, "0")}</span>
+          <span className="sx-v" aria-hidden="true">
+            {s.name}
+          </span>
+          <div className="sx-art" aria-hidden="true">
+            {s.art.map((id, k) => (
+              <img key={id} src={img(id, "c")} alt="" loading="lazy" style={{ ["--k" as string]: k }} />
+            ))}
+          </div>
+          <div className="sx-body">
+            <p className="sx-line">{s.line}</p>
+            <h3 className="sx-name">{s.name}</h3>
+            <Link href={`/katalog?brand=${s.id}`} className="btn btn-sm" tabIndex={i === cur ? 0 : -1}>
+              {s.count} позицій <Icon name="arrow" size={16} />
             </Link>
-          </li>
-        ))}
-      </ul>
-      <div className={`series-peek ${cur ? "is-on" : ""}`} ref={peek} aria-hidden="true">
-        {art && <img src={img(art, "s")} alt="" />}
-      </div>
+          </div>
+          <span className="sx-bar" aria-hidden="true" />
+        </article>
+      ))}
     </div>
   );
 }
