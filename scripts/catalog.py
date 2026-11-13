@@ -105,9 +105,12 @@ def text(h):
     lines = [re.sub(r'[ \t]+', ' ', l).strip() for l in t.split('\n')]
     return [l for l in lines if l and len(l) > 1]
 
+PAGES_JSON = R('research/pages.json')  # compact cache of parsed product pages, so research/html can be deleted
+_pages = json.load(open(PAGES_JSON)) if os.path.exists(PAGES_JSON) else {}
+
 def parse_page(code):
     f = R('research/html', f'{code}.html')
-    if not os.path.exists(f): return {}
+    if not os.path.exists(f): return _pages.get(code, {})
     s = open(f, encoding='utf-8', errors='ignore').read()
     out = {}
     m = re.search(r'"@type": "BreadcrumbList".*?\]', s, re.S)
@@ -118,6 +121,7 @@ def parse_page(code):
         if m.group(2): blocks[m.group(1).strip()] = text(m.group(2))
     out['desc'] = blocks.get('ОПИС ПРОДУКТУ', [])
     out['blocks'] = {k: v for k, v in blocks.items() if k != 'ОПИС ПРОДУКТУ'}
+    _pages[code] = out
     return out
 
 def white_square(im, size, fill=0.82):
@@ -137,6 +141,10 @@ def white_square(im, size, fill=0.82):
 def make_images(code):
     srcs = sorted(glob.glob(R('originals', f'{code}-*.jpg')))
     res = {'n': 0, 'cut': False}
+    if not srcs:  # originals deleted after a build: count the finished WebP files instead
+        n = 1 if os.path.exists(f'{IMG}/{code}.webp') else 0
+        while n and os.path.exists(f'{IMG}/{code}-{n}.webp'): n += 1
+        return {'n': n, 'cut': os.path.exists(f'{IMG}/{code}c.webp')}
     for i, src in enumerate(srcs[:5]):
         suffix = '' if i == 0 else f'-{i}'
         big, small = f'{IMG}/{code}{suffix}.webp', f'{IMG}/{code}{suffix}s.webp'
@@ -158,8 +166,6 @@ def make_images(code):
             else:
                 open(cut + '.skip', 'w').close()
         res['cut'] = os.path.exists(cut)
-    if res['n']:
-        w, h = Image.open(srcs[0]).size
     return res
 
 def main():
@@ -221,6 +227,7 @@ def main():
     for p in products: p['series'] = ok.get(p['series'])
 
     json.dump({'products': products, 'sections': secs, 'series': series_list}, open(R('src/data/catalog.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    json.dump(_pages, open(PAGES_JSON, 'w'), ensure_ascii=False, separators=(',', ':'))
     print(len(products), 'products;', {s['id']: s['count'] for s in secs})
     print('no image:', sum(1 for p in products if not p['imgs']), '; cut-outs:', sum(1 for p in products if p['cut']))
     print('series:', [(s['name'], s['count']) for s in series_list[:40]])

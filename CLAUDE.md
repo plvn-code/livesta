@@ -17,8 +17,8 @@ research/.venv/bin/python -I scripts/pdf_text.py <catalog.pdf> research/pdf_text
 research/.venv/bin/python -I scripts/pdf_codes.py research/pdf_text.json research/codes.json   # 6-digit codes (de-obfuscated digits)
 research/.venv/bin/python -I scripts/fetch_search.py .   # every PDF code → livesta.ua search JSON (research/search)
 research/.venv/bin/python -I scripts/fetch_pages.py .    # product pages (research/html) + original photos (originals/)
-research/.venv/bin/python -I scripts/catalog.py          # → src/data/catalog.json + public/images/p (cached; delete a file to rebuild)
-research/.venv/bin/python -I scripts/build_video.py .    # Pexels clips → public/video + posters
+research/.venv/bin/python -I scripts/catalog.py          # → src/data/catalog.json + public/images/p (cached; works without research/html + originals via research/pages.json, which were deleted to save disk)
+research/.venv/bin/python -I scripts/build_video.py .    # Pexels clips (re-download to research/video-raw first, URLs in docs/STATUS.md) → public/video
 ```
 
 ## New catalogue period (every ~4 weeks)
