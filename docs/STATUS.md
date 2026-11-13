@@ -1,6 +1,6 @@
 # Status — started 2026-11-13
 
-Local: http://localhost:3015. No GitHub / Vercel yet — ask the user first.
+Local: http://localhost:3015. GitHub: https://github.com/plvn-code/livesta (main), pushed 2026-11-13. No Vercel yet — ask the user first.
 
 ## Done
 Full shop in Ukrainian: intro, video hero with floating cut-out products, category tiles, «Крута ціна» pinned rail, word-scrub manifest, 4-step skincare ritual (sticky video), gift-box band (cover photo from the client's PDF), series hover wall, catalogue countdown band, perks, Instagram/Telegram/wholesale band. Catalogue with filters (section / sub-category / series / price / «Крута ціна» / search / sort, all in the URL), 8 section pages, 1166 product pages (gallery + zoom, old price + saving, description / composition / usage from livesta.ua, related), cart drawer + checkout (Нова пошта / Укрпошта / самовивіз, накладений платіж / переказ на картку), ⌘K search (name, series or code), consultation / one-click / wholesale forms, delivery page with FAQ, contacts, 404, sitemap, robots. Checked at 1440 and 390 px, no horizontal scroll, no console errors, cart → checkout → order tested.
