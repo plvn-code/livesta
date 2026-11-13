@@ -13,7 +13,8 @@ kill $(lsof -ti tcp:3015 -sTCP:LISTEN)   # restart: only our port, only LISTEN
 npm run lint && npx tsc --noEmit         # must stay clean
 open -a "Google Chrome" http://localhost:3015
 # data pipeline (research/.venv has pymupdf, Pillow, numpy, imageio-ffmpeg)
-research/.venv/bin/python -I /path/dump.py ~/Downloads/catalog.pdf research/pdf_text.json   # see scripts/ for the real steps:
+research/.venv/bin/python -I scripts/pdf_text.py <catalog.pdf> research/pdf_text.json   # PDF text per page
+research/.venv/bin/python -I scripts/pdf_codes.py research/pdf_text.json research/codes.json   # 6-digit codes (de-obfuscated digits)
 research/.venv/bin/python -I scripts/fetch_search.py .   # every PDF code → livesta.ua search JSON (research/search)
 research/.venv/bin/python -I scripts/fetch_pages.py .    # product pages (research/html) + original photos (originals/)
 research/.venv/bin/python -I scripts/catalog.py          # → src/data/catalog.json + public/images/p (cached; delete a file to rebuild)
